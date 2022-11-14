@@ -1,0 +1,4 @@
+{
+    "datausa_wages": "https://datausa.io/api/data?measures=Average%20Wage,Average%20Wage%20Appx%20MOE&drilldowns=Detailed%20Occupation",
+    "article_banner": "https://www.washingtonpost.com/wp-apps/imrs.php?src=https://arc-anglerfish-washpost-prod-washpost.s3.amazonaws.com/public/OVOV4MG5BEI6RM7QMJQHFCPP5Y.jpg&w=916"
+}

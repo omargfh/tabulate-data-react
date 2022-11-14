@@ -1,70 +1,126 @@
-# Getting Started with Create React App
+# Tabulate Data in React using TanStack (React)
+## Description
+First, this code begins by fetching average income data in the United States from [Data USA](datausa.io)'s public API.
+```js
+useEffect(() => {
+      if (fetches) {
+        return;
+      }
+      else {
+        fetches++;
+      }
+      fetch(endpoints.datausa_wages)
+          .then((res) => res.json())
+          .then((data) => {
+              setData(data.data);
+              setLoading(false);
+          })
+          .catch((err) => {
+            console.log(err);
+              setError(true);
+              setLoading(false);
+          })
+  }, []);
+```
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Then, it groups the resulting data by occupation, then loops through each occupation to extract the median income and compute the percentage change between each two consecutive years.
 
-## Available Scripts
+```js
+const groupedData = data.reduce((acc, item) => {
+    const occ = item['Detailed Occupation'];
+    if (!acc[occ]) {
+        acc[occ] = [];
+    }
+    acc[occ].push(item);
+    return acc;
+}, []);
 
-In the project directory, you can run:
+const finalData = Object.keys(groupedData).map((occ) => {
+    const occData = groupedData[occ];
+    const occObj = {};
+    occObj['Detailed Occupation'] = occ;
+    occObj['Min Year'] = Math.min(...occData.map((item) => item.Year));
+    occObj['Max Year'] = Math.max(...occData.map((item) => item.Year));
+    occData.forEach((item) => {
+        const prevYear = parseInt(item.Year) !== occObj['Min Year'] ? item.Year - 1 : parseInt(item.Year);
+        const prevYearData = occData.find((occItem) => parseInt(occItem.Year) === prevYear);
+        if (!prevYearData) {
+            return;
+        }
+        occObj[`Year - ${item.Year}`] = item['Average Wage'];
+        occObj[`Year Change - ${item.Year}`] =
+            percentageChange(item['Average Wage'], prevYearData['Average Wage']);
+    });
+    return occObj;
+});
 
-### `npm start`
+return finalData;
+```
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+Third, it memoizes this data and builds the render column interface required to implement an instance of TanStack table.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+```js
+const data = useMemo(() => handleData(dataRaw), [dataRaw]);
+const columns = useMemo(() => createColumns(), []);
+const [sorting, setSorting] = useState([]);
+const table = useReactTable({
+    data,
+    columns,
+    state: {
+        sorting,
+    },
+    onSortingChange: setSorting,
+    getSortedRowModel: getSortedRowModel(),
+    getCoreRowModel: getCoreRowModel(),
+}, useSortBy);
+```
 
-### `npm test`
+It also uses the Javascript Internationalization API to render dollar-values and percentages.
+```js
+const intl = new Intl['NumberFormat']('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+});
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+const prcnt = new Intl['NumberFormat']('en-US', {
+    style: 'percent',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+});
+```
 
-### `npm run build`
+Fourth, it render the TanStack instance as per documentation (see `./src/components/TabulatedData.js`).
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Additionally, it also uses `SortingState` from `@tanstack/react-table` to implement sorting using a custom function.
+```js
+sortingFn: (a, b) => {
+    a = a.original[`Year - ${i}`];
+    b = b.original[`Year - ${i}`];
+    return a < b ? -1 : (b < a ? 1 : 0);
+}
+```
+This ensures that N/A values are always toward the end of the sorted list.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+Finally, *for the visual highlight part*, the table uses text if the mean income for a specific occupation increased from the year prior. A red text is used in the opposite scenario, while a black text indicates lack of data to compare against.
+```css
+span.table-cell.table-change-increase {
+    color: #12a812;
+}
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+span.table-cell.table-change-decrease {
+    color: #e11616;
+}
 
-### `npm run eject`
+span.table-cell.table-change-none {
+    color: rgb(67, 67, 67);
+}
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+span.table-cell.table-change-na {
+    color: #888!important;
+    font-style: italic;
+}
+```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+The code also encapsulates the table in a dummy article.
