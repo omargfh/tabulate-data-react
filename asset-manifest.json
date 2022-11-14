@@ -1,10 +1,10 @@
 {
   "files": {
-    "main.css": "/tabulated-data.omar-ibrahim.com/static/css/main.33cb479b.css",
-    "main.js": "/tabulated-data.omar-ibrahim.com/static/js/main.195f1f7e.js",
-    "index.html": "/tabulated-data.omar-ibrahim.com/index.html",
-    "main.33cb479b.css.map": "/tabulated-data.omar-ibrahim.com/static/css/main.33cb479b.css.map",
-    "main.195f1f7e.js.map": "/tabulated-data.omar-ibrahim.com/static/js/main.195f1f7e.js.map"
+    "main.css": "/static/css/main.33cb479b.css",
+    "main.js": "/static/js/main.195f1f7e.js",
+    "index.html": "/index.html",
+    "main.33cb479b.css.map": "/static/css/main.33cb479b.css.map",
+    "main.195f1f7e.js.map": "/static/js/main.195f1f7e.js.map"
   },
   "entrypoints": [
     "static/css/main.33cb479b.css",
