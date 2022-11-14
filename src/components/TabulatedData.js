@@ -67,9 +67,19 @@ const createColumns = () => {
                 },
                 header: () => <span title={`Year ${i}`}>{i}</span>,
                 footer: info => <span>{i}</span>,
+                // sortUndefined: -1,
                 sortingFn: (a, b) => {
                     a = a.original[`Year - ${i}`];
                     b = b.original[`Year - ${i}`];
+                    if (a === undefined && b === undefined) {
+                        return 0;
+                    }
+                    if (a === undefined) {
+                        return -1;
+                    }
+                    if (b === undefined) {
+                        return 1;
+                    }
                     return a < b ? -1 : (b < a ? 1 : 0);
                 }
             })
